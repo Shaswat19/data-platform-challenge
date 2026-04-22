@@ -6,7 +6,7 @@ inside the library classes.
 
 Usage::
 
-    python -m steeleye.main --storage-type cloud --storage-url s3://my-bucket/output/instruments.csv
+    python -m steeleye.main --storage-type cloud --storage-path s3://my-bucket/output/instruments.csv
     python -m steeleye.main --storage-type local --storage-path instruments
 """
 
