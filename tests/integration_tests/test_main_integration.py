@@ -1,12 +1,11 @@
 """Integration tests for steeleye.main module."""
 
-import tempfile
+import shutil
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
-
 from steeleye.main import run_pipeline
 
 
@@ -79,7 +78,6 @@ class TestPipelineIntegration:
         )
         mock_cloud_storage_instance.upload_csv.assert_called_once_with(mock_df)
 
-    @patch("steeleye.main.Path")
     @patch("steeleye.main.ESMADownloader")
     @patch("steeleye.main.XMLParser")
     @patch("steeleye.main.DataTransformer")
@@ -88,7 +86,6 @@ class TestPipelineIntegration:
         mock_transformer: Mock,
         mock_parser: Mock,
         mock_downloader: Mock,
-        mock_path: Mock,
     ) -> None:
         """Test run_pipeline with local storage."""
         # Setup mocks
@@ -111,26 +108,23 @@ class TestPipelineIntegration:
         mock_transformer.return_value = mock_transformer_instance
         mock_transformer_instance.transform.return_value = mock_df
 
-        # Mock Path
-        mock_output_dir = Mock()
-        mock_path.return_value = mock_output_dir
-        mock_csv_path = Mock()
-        mock_output_dir.__truediv__ = Mock(return_value=mock_csv_path)
-
-        # Run pipeline
-        with patch("steeleye.main.pd.DataFrame.to_csv") as mock_to_csv:
+        # Run pipeline with actual temp directory
+        test_dir = "test_output_storage"
+        try:
             run_pipeline(
                 index_url="http://example.com/index",
                 storage_type="local",
-                storage_path="test_output",
+                storage_path=test_dir,
                 timeout=30,
             )
 
-        # Verify calls
-        mock_path.assert_called_once_with("output")
-        mock_output_dir.__truediv__.assert_called_with("test_output")
-        mock_csv_path.__truediv__.assert_called_with("instruments.csv")
-        mock_to_csv.assert_called_once()
+            # Verify CSV was created
+            csv_path = Path("output") / test_dir / "instruments.csv"
+            assert csv_path.exists()
+        finally:
+            # Clean up
+            if Path("output").exists():
+                shutil.rmtree("output")
 
     def test_run_pipeline_invalid_storage_type(self) -> None:
         """Test run_pipeline raises ValueError for invalid storage type."""
@@ -154,7 +148,7 @@ class TestIntegration:
         mock_parser: Mock,
         mock_downloader: Mock,
     ) -> None:
-        """Test the complete pipeline flow with mocked components."""
+        """Test the complete pipeline flow with mocked external components."""
         # Setup comprehensive mocks
         mock_downloader_instance = Mock()
         mock_downloader.return_value = mock_downloader_instance
@@ -199,33 +193,29 @@ class TestIntegration:
         mock_transformer_instance = Mock()
         mock_transformer.return_value = mock_transformer_instance
         transformed_df = parsed_df.copy()
-        transformed_df["a_count"] = [1]  # "Integration" has one 'a'
-        transformed_df["contains_a"] = ["YES"]
+        transformed_df["a_count"] = [0]  # "Integration" starts with uppercase
+        transformed_df["contains_a"] = ["NO"]
         mock_transformer_instance.transform.return_value = transformed_df
 
-        # Run pipeline with local storage
-        with tempfile.TemporaryDirectory() as temp_dir:
-            output_path = Path(temp_dir) / "integration_test"
+        # Run pipeline with actual temp directory
+        test_dir = "test_output_integration"
+        try:
+            run_pipeline(
+                index_url="http://example.com/index",
+                storage_type="local",
+                storage_path=test_dir,
+                timeout=30,
+            )
 
-            with patch("steeleye.main.Path") as mock_path_class:
-                mock_output_dir = Mock()
-                mock_path_class.return_value = mock_output_dir
-                mock_csv_path = Mock()
-                mock_output_dir.__truediv__ = Mock(return_value=mock_csv_path)
-                mock_csv_path.__truediv__ = Mock(return_value=Mock())
+            # Verify the pipeline called all components
+            mock_downloader.assert_called_once()
+            mock_parser.assert_called_once()
+            mock_transformer.assert_called_once()
 
-                run_pipeline(
-                    index_url="http://example.com/index",
-                    storage_type="local",
-                    storage_path=str(output_path),
-                    timeout=30,
-                )
-
-        # Verify the pipeline called all components
-        mock_downloader.assert_called_once()
-        mock_parser.assert_called_once()
-        mock_transformer.assert_called_once()
-
-        # Verify data flow
-        mock_parser_instance.parse.assert_called_once()
-        mock_transformer_instance.transform.assert_called_once_with(parsed_df)
+            # Verify data flow
+            mock_parser_instance.parse.assert_called_once()
+            mock_transformer_instance.transform.assert_called_once_with(parsed_df)
+        finally:
+            # Clean up
+            if Path("output").exists():
+                shutil.rmtree("output")

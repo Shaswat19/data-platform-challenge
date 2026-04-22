@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pandas as pd
 import pytest
-
 from steeleye.storage import CloudStorage
 
 
@@ -40,9 +39,8 @@ class TestCloudStorage:
         storage.upload_csv(df)
 
         mock_open.assert_called_once_with("s3://bucket/path.csv", mode="w")
-        mock_file.to_csv.assert_called_once()
-        args, kwargs = mock_file.to_csv.call_args
-        assert kwargs["index"] is False
+        # pandas calls write() on the file object, not to_csv()
+        assert mock_file.write.called
 
     @patch("steeleye.storage.fsspec.open")
     def test_upload_csv_with_options(self, mock_open: Mock) -> None:

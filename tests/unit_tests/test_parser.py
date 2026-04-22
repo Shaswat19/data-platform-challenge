@@ -4,7 +4,6 @@ import xml.etree.ElementTree as ET  # noqa: N817
 
 import pandas as pd
 import pytest
-
 from steeleye.parser import XMLParser
 
 

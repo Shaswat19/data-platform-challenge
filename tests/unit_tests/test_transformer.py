@@ -2,7 +2,6 @@
 
 import pandas as pd
 import pytest
-
 from steeleye.transformer import DataTransformer
 
 
@@ -30,10 +29,14 @@ class TestDataTransformer:
         assert "contains_a" in result.columns
 
         # Check a_count
-        assert result["a_count"].tolist() == [1, 3, 0]  # Apple:1, Banana:3, Cherry:0
+        assert result["a_count"].tolist() == [
+            0,
+            3,
+            0,
+        ]  # Apple:0 (uppercase A), Banana:3, Cherry:0
 
         # Check contains_a
-        assert result["contains_a"].tolist() == ["YES", "YES", "NO"]
+        assert result["contains_a"].tolist() == ["NO", "YES", "NO"]
 
         # Original columns preserved
         assert "FinInstrmGnlAttrbts.FullNm" in result.columns
@@ -86,8 +89,8 @@ class TestDataTransformer:
         transformer = DataTransformer()
         result = transformer.transform(df)
 
-        assert result["a_count"].tolist() == [1, 0, 0, 3]
-        assert result["contains_a"].tolist() == ["YES", "NO", "NO", "YES"]
+        assert result["a_count"].tolist() == [0, 0, 0, 3]
+        assert result["contains_a"].tolist() == ["NO", "NO", "NO", "YES"]
 
     def test_transform_case_sensitivity(self) -> None:
         """Test that 'a' count is case-sensitive (only lowercase)."""
@@ -100,5 +103,5 @@ class TestDataTransformer:
         transformer = DataTransformer()
         result = transformer.transform(df)
 
-        assert result["a_count"].tolist() == [1, 0, 1]  # Only lowercase 'a'
-        assert result["contains_a"].tolist() == ["YES", "NO", "YES"]
+        assert result["a_count"].tolist() == [0, 0, 1]  # Only lowercase 'a'
+        assert result["contains_a"].tolist() == ["NO", "NO", "YES"]

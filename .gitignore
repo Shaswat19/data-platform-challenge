@@ -3,3 +3,4 @@
 .ruff_cache/
 output/
 __pycache__/
+.coverage
