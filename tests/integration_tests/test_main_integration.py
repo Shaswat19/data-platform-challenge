@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
+
 from steeleye.main import run_pipeline
 
 
