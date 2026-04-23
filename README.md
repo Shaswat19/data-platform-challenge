@@ -3,6 +3,8 @@
 To setup the virtual environment and install dependencies run the below command on your linux terminal: 
 
 `source bin/dev_environment_setter `
+### Sample Usage 
+<img width="2711" height="1625" alt="image" src="https://github.com/user-attachments/assets/310aa0e5-471e-4899-8d68-226e7d73236a" />
 
 ## Running the Pipeline
 
@@ -118,3 +120,11 @@ GitHub Actions runs on push/PR to `main`:
 | `s3fs` | AWS S3 backend for fsspec |
 | `adlfs` | Azure Blob backend for fsspec |
 | `lxml` | XML parsing support |
+
+
+## Sample usage:
+<img width="2755" height="871" alt="image" src="https://github.com/user-attachments/assets/b9578a30-2fdc-426e-8db3-5e3efba2a71e" />
+##Sample output for local:
+<img width="3446" height="1534" alt="image" src="https://github.com/user-attachments/assets/c4f00655-a220-4dfc-bf8f-b8bb2904d23b" />
+
+
